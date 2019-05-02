@@ -1,3 +1,4 @@
+Email queries - works in V 17 not older versions...
 -- all emails
 select * from hsi.emailqueue order by hsi.distrequestnum desc
 
@@ -6,3 +7,32 @@ select * from hsi.distributionqueue order by distrequestnum desc
 
 --emails already sent
 select * from hsi.distributionhist order by distrequestnum desc
+
+--more info on emails waiting to be sent
+Select *
+From hsi.distributionqueue as dq
+Inner join
+(select * from hsi.emailqueue) as eq
+On eq.distrequestnum = dq.distrequestnum
+left join
+(select * from hsi.emailqueuerecip) as eqrec
+on eq.distrequestnum = eqrec.distrequestnum
+
+Order by eq.distrequestnum desc;
+
+--more info on emails already sent
+Select *
+From hsi.distributionhist as dh
+Inner join
+(select * from hsi.emailqueue) as eq
+On eq.distrequestnum = dh.distrequestnum
+left join
+(select * from hsi.emailqueuerecip) as eqrec
+on eq.distrequestnum = eqrec.distrequestnum
+
+where distsubject like '%Additional Approval Pending'
+Order by eq.distrequestnum desc;
+
+--for monitoring whether email is being sent
+--rows that are older than 5 minutes
+select * from hsi.distributionqueue where datediff(minute, requestdate, getdate()) > 5;
